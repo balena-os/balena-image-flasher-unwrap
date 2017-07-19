@@ -24,4 +24,4 @@ docker run --privileged --rm \
 	-v "$SCRIPTPATH/output":/output \
 	-v "$RESIN_IMAGE_FLASHER":/resin-image-flasher.img \
 	alephan/resin-image-flasher-unwrap:latest \
-	resin-image-flasher-unwrap.sh --resin-image-flasher /resin-image-flasher.img --output-directory /output
+	resin-image-flasher-unwrap --resin-image-flasher /resin-image-flasher.img --output-directory /output
