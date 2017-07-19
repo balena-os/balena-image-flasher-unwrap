@@ -23,5 +23,5 @@ docker run --privileged --rm \
 	-v /dev:/dev \
 	-v "$SCRIPTPATH/output":/output \
 	-v "$RESIN_IMAGE_FLASHER":/resin-image-flasher.img \
-	agherzan/resin-image-flasher-unwrap:latest \
+	alephan/resin-image-flasher-unwrap:latest \
 	resin-image-flasher-unwrap.sh --resin-image-flasher /resin-image-flasher.img --output-directory /output
