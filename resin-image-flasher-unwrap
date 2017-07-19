@@ -97,7 +97,7 @@ popd > /dev/null 2>&1
 [ ! -d "$OUTPUT_DIR" ] && log ERROR "Output directory not found."
 
 # Setup mountpoints
-rm -rvf $mountpoints
+rm -rf $mountpoints
 mkdir -p \
 	$resin_image_boot_mnt \
 	$resin_image_root_mnt \
