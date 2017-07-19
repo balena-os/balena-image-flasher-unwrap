@@ -1,0 +1,5 @@
+FROM ubuntu:16.04
+RUN apt-get update
+ADD ./resin-image-flasher-unwrap.sh /bin
+RUN chmod a+x /bin/resin-image-flasher-unwrap.sh
+CMD /bin/resin-image-flasher-unwrap.sh
