@@ -86,6 +86,8 @@ cleanup () {
 trap cleanup EXIT SIGHUP SIGINT SIGTERM
 
 # Get the absolute script location
+# It is done in this convoluted way to address cases were the script is ran
+# using relative path.
 pushd "$(dirname "$0")" > /dev/null 2>&1
 SCRIPTPATH="$(pwd)"
 popd > /dev/null 2>&1
