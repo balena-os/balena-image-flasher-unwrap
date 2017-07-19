@@ -16,7 +16,7 @@ resin image.
 
 The script needs to be ran as root because it creates loop devices and mounts
 them afterwards. For more information about all the arguments supported, run
-the script with `--help`.
+the main script (`resin-image-flasher-unwrap.sh`) with `--help`.
 
 ## Contributions
 Want to contribute? Great! Throw pull requests at us.
