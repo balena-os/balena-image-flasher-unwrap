@@ -120,6 +120,10 @@ mount "${resin_image_loop_dev}p1" "$resin_image_boot_mnt"
 mount "${resin_image_loop_dev}p2" "$resin_image_root_mnt"
 cp -r $resin_image_flasher_boot_mnt/splash/* "$resin_image_boot_mnt/splash"
 cp "$resin_image_flasher_boot_mnt/config.json" "$resin_image_boot_mnt/config.json"
+
+tmp=$(mktemp)
+jq '.yocto.deployArtifact = "resin-image.resinos-img"' "$resin_image_boot_mnt/device-type.json" > "$tmp" && mv "$tmp" "$resin_image_boot_mnt/device-type.json"
+
 if [ -d  "$resin_image_flasher_boot_mnt/system-connections" ]; then
 	rm -rf "$resin_image_boot_mnt/system-connections"
 	cp -r "$resin_image_flasher_boot_mnt/system-connections" "$resin_image_boot_mnt/system-connections"
