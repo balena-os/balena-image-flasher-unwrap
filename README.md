@@ -4,7 +4,7 @@ This small tool provides the ability to get the embedded resin image in a resin 
 
 ## How to use
 
-This tool can be easily ran by itself or using the prebuilt docker image.
+This tool can be easily ran by either using the prebuilt docker image or running the `resin-image-flasher-unwrap` script directly. We strongly encourage using the prebuilt docker image (i.e `docker-run` method) to make sure that the script dependency requirements are met.
 
 ### Run it with docker
 
