@@ -14,14 +14,31 @@ if [ ! -f "$RESIN_IMAGE_FLASHER" ]; then
 	exit 1
 fi
 
+# join arguments to pass to the container...
+shift
+args=()
+while [[ $# -gt 1 ]]; do
+	args+=("$1 $2")
+	shift
+	shift
+done
+flasher_args="${args[*]}"
+
 # Get the absolute script location
 pushd "$(dirname "$0")" > /dev/null 2>&1
 SCRIPTPATH="$(pwd)"
 popd > /dev/null 2>&1
 
+echo "Building tool, please wait..."
+extraction_container="$(docker build -q -f Dockerfile.amd64 .)"
+
+resin_image_name="$(basename ${RESIN_IMAGE_FLASHER})"
+export USER_ID="$(id -u $USER)"
+
 docker run --privileged --rm \
 	-v /dev:/dev \
 	-v "$SCRIPTPATH/output":/output \
-	-v "$RESIN_IMAGE_FLASHER":/resin-image-flasher.img \
-	alephan/resin-image-flasher-unwrap:latest \
-	resin-image-flasher-unwrap --resin-image-flasher /resin-image-flasher.img --output-directory /output
+	-v "$RESIN_IMAGE_FLASHER":"/$resin_image_name" \
+	-e USER_ID \
+	"$extraction_container" \
+	resin-image-flasher-unwrap --resin-image-flasher "/$resin_image_name" -o /output $flasher_args

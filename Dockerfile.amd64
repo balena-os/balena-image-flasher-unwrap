@@ -1,4 +1,11 @@
 FROM ubuntu:16.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -yq qemu-utils libguestfs-tools
+
 COPY ./resin-image-flasher-unwrap /bin
 RUN chmod a+x /bin/resin-image-flasher-unwrap
+
 CMD /bin/resin-image-flasher-unwrap
