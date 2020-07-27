@@ -104,14 +104,16 @@ if [ ! -z "$IMAGE_SIZE" ] && [ -z "$IMAGE_FORMAT" ]; then
 fi
 
 # Ensure the format is valid...
-case $IMAGE_FORMAT in
-	vdi|vhd|vmdk)
-		;;
-	*)
-		log ERROR "--format can only be one of vdi/vhd/vmdk"
-		exit 1
-		;;
-esac
+if [ -n "${IMAGE_FORMAT}" ]; then
+	case $IMAGE_FORMAT in
+		vdi|vhd|vmdk)
+			;;
+		*)
+			log ERROR "--format can only be one of vdi/vhd/vmdk"
+			exit 1
+			;;
+	esac
+fi
 
 cleanup () {
 	EXIT_CODE=$?
