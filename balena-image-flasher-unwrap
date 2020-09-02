@@ -2,11 +2,11 @@
 
 set -e
 
-mountpoints=/tmp/resin-image-flasher-unwrap/mountpoints
-resin_image_boot_mnt=${mountpoints}/resin-boot
-resin_image_root_mnt=${mountpoints}/resin-root
-resin_image_flasher_boot_mnt=${mountpoints}/flash-boot
-resin_image_flasher_root_mnt=${mountpoints}/flash-root
+mountpoints=/tmp/balena-image-flasher-unwrap/mountpoints
+balena_image_boot_mnt=${mountpoints}/resin-boot
+balena_image_root_mnt=${mountpoints}/resin-root
+balena_image_flasher_boot_mnt=${mountpoints}/flash-boot
+balena_image_flasher_root_mnt=${mountpoints}/flash-root
 
 qemu_img="$(command -v qemu-img)"
 if [ -z "$qemu_img" ]; then
@@ -19,7 +19,7 @@ help() {
 $0 <OPTION>
 
 	Options:
-		-f, --resin-image-flasher
+		-f, --balena-image-flasher
 			The file to be used as a flasher image.
 			This argument is mandatory.
 		-o, --output-directory
@@ -63,11 +63,11 @@ while [[ $# -gt 0 ]]; do
 			help
 			exit 0
 			;;
-		-f|--resin-image-flasher)
+		-f|--balena-image-flasher)
 			if [ -z "$2" ]; then
 				log ERROR "\"$1\" argument needs a value."
 			fi
-			resin_image_flasher=$2
+			balena_image_flasher=$2
 			shift
 			;;
 		-o|--output-directory)
@@ -117,43 +117,43 @@ fi
 
 cleanup () {
 	EXIT_CODE=$?
-	umount "$resin_image_boot_mnt" > /dev/null 2>&1 || true
-	umount "$resin_image_root_mnt" > /dev/null 2>&1 || true
-	umount "$resin_image_flasher_boot_mnt" > /dev/null 2>&1 || true
-	umount "$resin_image_flasher_root_mnt" > /dev/null 2>&1 || true
-	losetup -d "$resin_image_loop_dev" "$resin_image_flasher_loop_dev" > /dev/null 2>&1 || true
+	umount "$balena_image_boot_mnt" > /dev/null 2>&1 || true
+	umount "$balena_image_root_mnt" > /dev/null 2>&1 || true
+	umount "$balena_image_flasher_boot_mnt" > /dev/null 2>&1 || true
+	umount "$balena_image_flasher_root_mnt" > /dev/null 2>&1 || true
+	losetup -d "$balena_image_loop_dev" "$balena_image_flasher_loop_dev" > /dev/null 2>&1 || true
 
 	# after unmounting the image we can change it...
 	if [ ! -z "$IMAGE_FORMAT" ]; then
 		log "Converting output image to target format: $IMAGE_FORMAT..."
-		new_resin_image="${image_basename}.qcow2"
-		"$qemu_img" convert -f raw "$resin_image" -O qcow2 "$new_resin_image"
+		new_balena_image="${image_basename}.qcow2"
+		"$qemu_img" convert -f raw "$balena_image" -O qcow2 "$new_balena_image"
 
 		if [ ! -z "$IMAGE_SIZE" ]; then
 			log "Setting target disk image size..."
-			"$qemu_img" resize -f qcow2 "$new_resin_image" "$IMAGE_SIZE"
+			"$qemu_img" resize -f qcow2 "$new_balena_image" "$IMAGE_SIZE"
 		fi
 
 		converted_image="$image_basename.$IMAGE_FORMAT"
 		case $IMAGE_FORMAT in
 			vdi)
-				"$qemu_img" convert -f qcow2 "$new_resin_image" -O vdi "$converted_image"
+				"$qemu_img" convert -f qcow2 "$new_balena_image" -O vdi "$converted_image"
 				;;
 			vhd)
-				"$qemu_img" convert -f qcow2 "$new_resin_image" -O vpc "$converted_image"
+				"$qemu_img" convert -f qcow2 "$new_balena_image" -O vpc "$converted_image"
 				;;
 			vmdk)
-				"$qemu_img" convert -f qcow2 "$new_resin_image" -O vmdk "$converted_image" -o compat6
+				"$qemu_img" convert -f qcow2 "$new_balena_image" -O vmdk "$converted_image" -o compat6
 				;;
 		esac
 				
-		rm -f "$resin_image" "$new_resin_image"
-		resin_image="$converted_image"
+		rm -f "$balena_image" "$new_balena_image"
+		balena_image="$converted_image"
 	fi
 
 	if [ ! -z "$USER_ID" ]; then
 		log "Changing file permissions."
-		chown "$USER_ID:$USER_ID" "$resin_image"
+		chown "$USER_ID:$USER_ID" "$balena_image"
 	fi
 
 	echo "Done."
@@ -176,38 +176,38 @@ popd > /dev/null 2>&1
 # Setup mountpoints
 rm -rf $mountpoints
 mkdir -p \
-	$resin_image_boot_mnt \
-	$resin_image_root_mnt \
-	$resin_image_flasher_boot_mnt \
-	$resin_image_flasher_root_mnt
+	$balena_image_boot_mnt \
+	$balena_image_root_mnt \
+	$balena_image_flasher_boot_mnt \
+	$balena_image_flasher_root_mnt
 
-[ -z "$resin_image_flasher" ] && log ERROR "No resin image flasher available."
-log "Unwraping resin image from the provided resin image flasher..."
-resin_image_flasher_loop_dev="$(losetup -fP --show "$resin_image_flasher")"
-mount "${resin_image_flasher_loop_dev}p1" "$resin_image_flasher_boot_mnt" > /dev/null 2>&1
-mount "${resin_image_flasher_loop_dev}p2" "$resin_image_flasher_root_mnt" > /dev/null 2>&1
+[ -z "$balena_image_flasher" ] && log ERROR "No balena image flasher available."
+log "Unwraping balena image from the provided balena image flasher..."
+balena_image_flasher_loop_dev="$(losetup -fP --show "$balena_image_flasher")"
+mount "${balena_image_flasher_loop_dev}p1" "$balena_image_flasher_boot_mnt" > /dev/null 2>&1
+mount "${balena_image_flasher_loop_dev}p2" "$balena_image_flasher_root_mnt" > /dev/null 2>&1
 
-flasher_image_basename="$(basename "$resin_image_flasher")"
+flasher_image_basename="$(basename "$balena_image_flasher")"
 image_basename="$OUTPUT_DIR/${flasher_image_basename%.*}"
 
-resin_image="$(find "$resin_image_flasher_root_mnt/opt" -type f | head -n1)"
-[ -z "$resin_image" ] && log ERROR "The resin image flasher doesn't contain a resin image."
-cp "$resin_image" "$image_basename.img"
-resin_image="$image_basename.img"
+balena_image="$(find "$balena_image_flasher_root_mnt/opt" -type f | head -n1)"
+[ -z "$balena_image" ] && log ERROR "The balena image flasher doesn't contain a balena image."
+cp "$balena_image" "$image_basename.img"
+balena_image="$image_basename.img"
 
-log "Migrating configuration from resin image flasher to resin-image..."
-resin_image_loop_dev="$(losetup -fP --show "$resin_image")"
-mount "${resin_image_loop_dev}p1" "$resin_image_boot_mnt"
-mount "${resin_image_loop_dev}p2" "$resin_image_root_mnt"
-cp -r $resin_image_flasher_boot_mnt/splash/* "$resin_image_boot_mnt/splash"
-cp "$resin_image_flasher_boot_mnt/config.json" "$resin_image_boot_mnt/config.json"
-if [ -d  "$resin_image_flasher_boot_mnt/system-connections" ]; then
-	rm -rf "$resin_image_boot_mnt/system-connections"
-	cp -r "$resin_image_flasher_boot_mnt/system-connections" "$resin_image_boot_mnt/system-connections"
+log "Migrating configuration from balena image flasher to balena-image..."
+balena_image_loop_dev="$(losetup -fP --show "$balena_image")"
+mount "${balena_image_loop_dev}p1" "$balena_image_boot_mnt"
+mount "${balena_image_loop_dev}p2" "$balena_image_root_mnt"
+cp -r $balena_image_flasher_boot_mnt/splash/* "$balena_image_boot_mnt/splash"
+cp "$balena_image_flasher_boot_mnt/config.json" "$balena_image_boot_mnt/config.json"
+if [ -d  "$balena_image_flasher_boot_mnt/system-connections" ]; then
+	rm -rf "$balena_image_boot_mnt/system-connections"
+	cp -r "$balena_image_flasher_boot_mnt/system-connections" "$balena_image_boot_mnt/system-connections"
 fi
-if [ -d  "$resin_image_flasher_boot_mnt/system-proxy" ]; then
-	rm -rf "$resin_image_boot_mnt/system-proxy"
-	cp -r "$resin_image_flasher_boot_mnt/system-proxy" "$resin_image_boot_mnt/system-proxy"
+if [ -d  "$balena_image_flasher_boot_mnt/system-proxy" ]; then
+	rm -rf "$balena_image_boot_mnt/system-proxy"
+	cp -r "$balena_image_flasher_boot_mnt/system-proxy" "$balena_image_boot_mnt/system-proxy"
 fi
 
 log "Unwrapping complete."
