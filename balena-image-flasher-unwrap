@@ -188,7 +188,7 @@ mount "${balena_image_flasher_loop_dev}p1" "$balena_image_flasher_boot_mnt" > /d
 mount "${balena_image_flasher_loop_dev}p2" "$balena_image_flasher_root_mnt" > /dev/null 2>&1
 
 flasher_image_basename="$(basename "$balena_image_flasher")"
-image_basename="$OUTPUT_DIR/${flasher_image_basename%.*}"
+image_basename="$OUTPUT_DIR/$(echo ${flasher_image_basename%.*} | sed 's/-flasher//g')"
 
 balena_image="$(find "$balena_image_flasher_root_mnt/opt" -type f | head -n1)"
 [ -z "$balena_image" ] && log ERROR "The balena image flasher doesn't contain a balena image."
