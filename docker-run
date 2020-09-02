@@ -4,12 +4,12 @@ if [ -z "$1" ]; then
 	echo "First argument needs to be the path to the flasher image."
 	exit 1
 fi
-RESIN_IMAGE_FLASHER=$1
-if [[ "$RESIN_IMAGE_FLASHER" != /* ]]; then
+BALENA_IMAGE_FLASHER=$1
+if [[ "$BALENA_IMAGE_FLASHER" != /* ]]; then
 	echo "Image argument needs to be an absolute path."
 	exit 1
 fi
-if [ ! -f "$RESIN_IMAGE_FLASHER" ]; then
+if [ ! -f "$BALENA_IMAGE_FLASHER" ]; then
 	echo "Image argument not found."
 	exit 1
 fi
@@ -32,13 +32,13 @@ popd > /dev/null 2>&1
 echo "Building tool, please wait..."
 extraction_container="$(docker build -q -f Dockerfile.amd64 .)"
 
-resin_image_name="$(basename ${RESIN_IMAGE_FLASHER})"
+balena_image_name="$(basename ${BALENA_IMAGE_FLASHER})"
 export USER_ID="$(id -u $USER)"
 
 docker run --privileged --rm \
 	-v /dev:/dev \
 	-v "$SCRIPTPATH/output":/output \
-	-v "$RESIN_IMAGE_FLASHER":"/$resin_image_name" \
+	-v "$BALENA_IMAGE_FLASHER":"/$balena_image_name" \
 	-e USER_ID \
 	"$extraction_container" \
-	resin-image-flasher-unwrap --resin-image-flasher "/$resin_image_name" -o /output $flasher_args
+	balena-image-flasher-unwrap --balena-image-flasher "/$balena_image_name" -o /output $flasher_args
