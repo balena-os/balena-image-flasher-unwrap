@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -yq qemu-utils libguestfs-tools
 
-COPY ./resin-image-flasher-unwrap /bin
-RUN chmod a+x /bin/resin-image-flasher-unwrap
+COPY ./balena-image-flasher-unwrap /bin
+RUN chmod a+x /bin/balena-image-flasher-unwrap
 
-CMD /bin/resin-image-flasher-unwrap
+CMD /bin/balena-image-flasher-unwrap

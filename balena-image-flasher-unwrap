@@ -1,0 +1,213 @@
+#!/bin/bash
+
+set -e
+
+mountpoints=/tmp/balena-image-flasher-unwrap/mountpoints
+balena_image_boot_mnt=${mountpoints}/resin-boot
+balena_image_root_mnt=${mountpoints}/resin-root
+balena_image_flasher_boot_mnt=${mountpoints}/flash-boot
+balena_image_flasher_root_mnt=${mountpoints}/flash-root
+
+qemu_img="$(command -v qemu-img)"
+if [ -z "$qemu_img" ]; then
+	echo "Missing tool: qemu-img"
+	exit 1
+fi
+
+help() {
+	cat << EOF
+$0 <OPTION>
+
+	Options:
+		-f, --balena-image-flasher
+			The file to be used as a flasher image.
+			This argument is mandatory.
+		-o, --output-directory
+			By default the unwrapped image will be outputted in the directory
+			where this tool resides. Custom location can be specified using
+			this flag.
+		-s, --image-size
+			Set the extracted block device image size to a new value. This is
+			useful when creating disk images for virtual machines.
+		-F, --format
+			Along with extracting the RAW block device image, you will also get
+			an image in the format you specify here. Options: vmdk/vdi/vhd
+EOF
+}
+
+function log {
+	case $1 in
+		ERROR)
+			loglevel=ERROR
+			shift
+			;;
+		WARN)
+			loglevel=WARNING
+			shift
+			;;
+		*)
+		loglevel=LOG
+			;;
+	esac
+	printf "%s%s\n" "[$loglevel]" "$1"
+	if [ "$loglevel" == "ERROR" ]; then
+		exit 1
+	fi
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+	arg="$1"
+	case $arg in
+		-h|--help)
+			help
+			exit 0
+			;;
+		-f|--balena-image-flasher)
+			if [ -z "$2" ]; then
+				log ERROR "\"$1\" argument needs a value."
+			fi
+			balena_image_flasher=$2
+			shift
+			;;
+		-o|--output-directory)
+			if [ -z "$2" ]; then
+				log ERROR "\"$1\" argument needs a value."
+			fi
+			OUTPUT_DIR=$2
+			shift
+			;;
+		-s|--image-size)
+			if [ -z "$2" ]; then
+				log ERROR "\"$1\" argument needs a value."
+			fi
+			IMAGE_SIZE=$2
+			shift
+			;;
+		-F|--format)			
+			IMAGE_FORMAT=$2
+			shift
+			;;
+		*)
+			echo "Unrecognized option $1."
+			help
+			exit 1
+			;;
+	esac
+	shift
+done
+
+# The image size change is only supported when building VM formatted images...
+if [ ! -z "$IMAGE_SIZE" ] && [ -z "$IMAGE_FORMAT" ]; then
+	log ERROR "--image-size can only be specified in conjunction with --format"
+	exit 1
+fi
+
+# Ensure the format is valid...
+if [ -n "${IMAGE_FORMAT}" ]; then
+	case $IMAGE_FORMAT in
+		vdi|vhd|vmdk)
+			;;
+		*)
+			log ERROR "--format can only be one of vdi/vhd/vmdk"
+			exit 1
+			;;
+	esac
+fi
+
+cleanup () {
+	EXIT_CODE=$?
+	umount "$balena_image_boot_mnt" > /dev/null 2>&1 || true
+	umount "$balena_image_root_mnt" > /dev/null 2>&1 || true
+	umount "$balena_image_flasher_boot_mnt" > /dev/null 2>&1 || true
+	umount "$balena_image_flasher_root_mnt" > /dev/null 2>&1 || true
+	losetup -d "$balena_image_loop_dev" "$balena_image_flasher_loop_dev" > /dev/null 2>&1 || true
+
+	# after unmounting the image we can change it...
+	if [ ! -z "$IMAGE_FORMAT" ]; then
+		log "Converting output image to target format: $IMAGE_FORMAT..."
+		new_balena_image="${image_basename}.qcow2"
+		"$qemu_img" convert -f raw "$balena_image" -O qcow2 "$new_balena_image"
+
+		if [ ! -z "$IMAGE_SIZE" ]; then
+			log "Setting target disk image size..."
+			"$qemu_img" resize -f qcow2 "$new_balena_image" "$IMAGE_SIZE"
+		fi
+
+		converted_image="$image_basename.$IMAGE_FORMAT"
+		case $IMAGE_FORMAT in
+			vdi)
+				"$qemu_img" convert -f qcow2 "$new_balena_image" -O vdi "$converted_image"
+				;;
+			vhd)
+				"$qemu_img" convert -f qcow2 "$new_balena_image" -O vpc "$converted_image"
+				;;
+			vmdk)
+				"$qemu_img" convert -f qcow2 "$new_balena_image" -O vmdk "$converted_image" -o compat6
+				;;
+		esac
+				
+		rm -f "$balena_image" "$new_balena_image"
+		balena_image="$converted_image"
+	fi
+
+	if [ ! -z "$USER_ID" ]; then
+		log "Changing file permissions."
+		chown "$USER_ID:$USER_ID" "$balena_image"
+	fi
+
+	echo "Done."
+
+	exit $EXIT_CODE
+}
+trap cleanup EXIT SIGHUP SIGINT SIGTERM
+
+# Get the absolute script location
+# It is done in this convoluted way to address cases were the script is ran
+# using relative path.
+pushd "$(dirname "$0")" > /dev/null 2>&1
+SCRIPTPATH="$(pwd)"
+popd > /dev/null 2>&1
+
+# By default output the image in the same directory as this tool
+[ -z "$OUTPUT_DIR" ] && OUTPUT_DIR=$SCRIPTPATH
+[ ! -d "$OUTPUT_DIR" ] && log ERROR "Output directory not found."
+
+# Setup mountpoints
+rm -rf $mountpoints
+mkdir -p \
+	$balena_image_boot_mnt \
+	$balena_image_root_mnt \
+	$balena_image_flasher_boot_mnt \
+	$balena_image_flasher_root_mnt
+
+[ -z "$balena_image_flasher" ] && log ERROR "No balena image flasher available."
+log "Unwraping balena image from the provided balena image flasher..."
+balena_image_flasher_loop_dev="$(losetup -fP --show "$balena_image_flasher")"
+mount "${balena_image_flasher_loop_dev}p1" "$balena_image_flasher_boot_mnt" > /dev/null 2>&1
+mount "${balena_image_flasher_loop_dev}p2" "$balena_image_flasher_root_mnt" > /dev/null 2>&1
+
+flasher_image_basename="$(basename "$balena_image_flasher")"
+image_basename="$OUTPUT_DIR/$(echo ${flasher_image_basename%.*} | sed 's/-flasher//g')"
+
+balena_image="$(find "$balena_image_flasher_root_mnt/opt" -type f | head -n1)"
+[ -z "$balena_image" ] && log ERROR "The balena image flasher doesn't contain a balena image."
+cp "$balena_image" "$image_basename.img"
+balena_image="$image_basename.img"
+
+log "Migrating configuration from balena image flasher to balena-image..."
+balena_image_loop_dev="$(losetup -fP --show "$balena_image")"
+mount "${balena_image_loop_dev}p1" "$balena_image_boot_mnt"
+mount "${balena_image_loop_dev}p2" "$balena_image_root_mnt"
+cp -r $balena_image_flasher_boot_mnt/splash/* "$balena_image_boot_mnt/splash"
+cp "$balena_image_flasher_boot_mnt/config.json" "$balena_image_boot_mnt/config.json"
+if [ -d  "$balena_image_flasher_boot_mnt/system-connections" ]; then
+	rm -rf "$balena_image_boot_mnt/system-connections"
+	cp -r "$balena_image_flasher_boot_mnt/system-connections" "$balena_image_boot_mnt/system-connections"
+fi
+if [ -d  "$balena_image_flasher_boot_mnt/system-proxy" ]; then
+	rm -rf "$balena_image_boot_mnt/system-proxy"
+	cp -r "$balena_image_flasher_boot_mnt/system-proxy" "$balena_image_boot_mnt/system-proxy"
+fi
+
+log "Unwrapping complete."
