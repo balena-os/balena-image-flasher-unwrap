@@ -84,7 +84,7 @@ while [[ $# -gt 0 ]]; do
 			IMAGE_SIZE=$2
 			shift
 			;;
-		-F|--format)			
+		-F|--format)
 			IMAGE_FORMAT=$2
 			shift
 			;;
@@ -146,7 +146,7 @@ cleanup () {
 				"$qemu_img" convert -f qcow2 "$new_balena_image" -O vmdk "$converted_image" -o compat6
 				;;
 		esac
-				
+
 		rm -f "$balena_image" "$new_balena_image"
 		balena_image="$converted_image"
 	fi

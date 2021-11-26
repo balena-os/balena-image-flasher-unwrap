@@ -39,6 +39,6 @@ docker run --privileged --rm \
 	-v /dev:/dev \
 	-v "$SCRIPTPATH/output":/output \
 	-v "$BALENA_IMAGE_FLASHER":"/$balena_image_name" \
-	-e USER_ID \
+	-e "$USER_ID" \
 	"$extraction_container" \
 	balena-image-flasher-unwrap --balena-image-flasher "/$balena_image_name" -o /output $flasher_args
