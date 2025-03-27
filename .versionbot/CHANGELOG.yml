@@ -1,0 +1,132 @@
+- commits:
+    - subject: Add flowzone support
+      hash: 3bdb813152ae504ba0e20d679fb205505003e584
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+        Signed-off-by: Alex Gonzalez <alexg@balena.io>
+        signed-off-by: Alex Gonzalez <alexg@balena.io>
+      author: Alex Gonzalez
+      nested: []
+    - subject: "balena-image-flasher-unwrap: extend file match to include extension"
+      hash: a4de0cf17ed8dff073fb317a7f896565f7a47126
+      body: |
+        New images include both a raw image and its signature, which makes
+        the script fail when the match returns the signature file.
+
+        This commit introduces an exact match on the `balenaos-img` extension to
+        prevent this.
+      footer:
+        Change-type: patch
+        change-type: patch
+        Signed-off-by: Alex Gonzalez <alexg@balena.io>
+        signed-off-by: Alex Gonzalez <alexg@balena.io>
+      author: Alex Gonzalez
+      nested: []
+  version: 0.0.5
+  title: ""
+  date: 2025-03-27T18:58:25.429Z
+- version: 0.0.4
+  date: 2020-09-04T10:08:16Z
+  commits:
+    - hash: fa7cbd63df5fcfc1d0278989561d1918a56df3fa
+      author: Alexandru Costache
+      footers:
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      subject: "resin-image-flasher-unwrap: Rename resin to balena in tool"
+      body: |-
+        Rename script along with all occurrences, except for
+        partition names, to avoid breaking compatibility.
+    - hash: 66cfcd64aadcb4d9a2df7083c65c552c20b8459f
+      author: Alexandru Costache
+      footers:
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      subject: "README: Remove resin occurrences"
+      body: ""
+    - hash: ab93a47d02451de226da7d32901588883a21c93e
+      author: Alexandru Costache
+      footers:
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      subject: "docker-run: Remove resin occurrences"
+      body: ""
+    - hash: 64595d5246ae7d3c98cf8a626747109abb4dbe80
+      author: Alexandru Costache
+      footers:
+        change-type: patch
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      subject: "Dockerfile: Rename resin occurrences to balena"
+      body: ""
+    - hash: 57ce369b6b7a6ae613bd29b3d11867f13970975f
+      author: Alexandru Costache
+      footers:
+        signed-off-by: Alexandru Costache <alexandru@balena.io>
+      subject: "balena-image-flasher-unwrap: Remove flasher from resulting image name"
+      body: |-
+        Previously the extracted image had the same name
+        as the flasher one. Let's remove the workd flasher from
+        the name.
+- version: 0.0.3
+  date: 2020-08-03T08:31:20Z
+  commits:
+    - hash: 08aa05e4b42a1e489a380d4857339aa594cc8fed
+      author: Alex Gonzalez
+      footers:
+        change-type: patch
+        signed-off-by: Alex Gonzalez <alexg@balena.io>
+      subject: "resin-image-flasher-unwrap: Do not check image format if not present"
+      body: >-
+        The standard flow for this tool is to unwrap a resin-image from a
+
+        resin-image-flasher.
+
+        On commit cea5fc2a5623 the option of converting it to a different format
+        to
+
+        use in emulators was introduced, but the image format was made
+        compulsory
+
+        with the script exiting if not provided.
+
+        This commit only checks the validity of image format when actually
+        provided.
+    - hash: 726b9022598e02b8e6845882dd7107348696ed02
+      author: Alex Gonzalez
+      footers:
+        change-type: none
+        signed-off-by: Alex Gonzalez <alexg@balena.io>
+      subject: "README: Add some context in the introduction and usage examples"
+      body: |-
+        The tool is not intuitive enough to be used as it stands, so improve the
+        documentation to make it more user friendly.
+- version: 0.0.2
+  date: 2020-08-03T08:16:41Z
+  commits:
+    - hash: 39fdc7788a4f141366a044dcc542de0a56c0e98f
+      author: Alex Gonzalez
+      footers:
+        signed-off-by: Alex Gonzalez <alexg@balena.io>
+      subject: "versionist: Add repo.yml file to start versioning commits"
+      body: So that we can better track bug reports lets start to version this tool.
+    - hash: cea5fc2a56234e4f9a63a3302c077741eba23c2f
+      author: Rich Bayliss
+      footers:
+        change-type: patch
+        signed-off-by: Rich Bayliss <rich@balena.io>
+      subject: Additional options
+      body: |-
+        ==================
+        --format [vdi/vhd/vmdk]
+        For creating images suitable for various VM platforms.
+        --image-size xxG
+        Set the block device image size, which will be expanded
+        into when booting the image.
+        Auto-build Docker image
+        =======================
+        There is now no need to build the tool first, it will be built whenever
+        the `docker-run` script is executed. This doesn't impact
+        performance on subsequent runs.
+    - hash: 94fa39670a879cafc63bc0b319264712de64e0e2
+      author: Kostas Lekkas
+      subject: Update README.md
+      body: "Fixes #2"
