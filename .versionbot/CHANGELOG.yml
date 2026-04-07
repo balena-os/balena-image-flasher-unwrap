@@ -1,4 +1,18 @@
 - commits:
+    - subject: "README: Add deprecation notice pointing to balenaCLI"
+      hash: b51dac20cd3c528217999e9d53f239095d19a64d
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+        Signed-off-by: Kyle Harding <kyle@balena.io>
+        signed-off-by: Kyle Harding <kyle@balena.io>
+      author: Kyle Harding
+      nested: []
+  version: 0.0.6
+  title: ""
+  date: 2026-04-07T18:48:13.272Z
+- commits:
     - subject: Add flowzone support
       hash: 3bdb813152ae504ba0e20d679fb205505003e584
       body: ""
