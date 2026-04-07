@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> **This repository is archived and no longer maintained.**
+> The balenaCLI now supports downloading disk images directly with
+> `balena os download <device-type> --type disk-image`. See the
+> [CLI documentation](https://docs.balena.io/reference/balena-cli/latest/#os-download)
+> for details.
+
 # balena-image-flasher-unwrap
 
 BalenaOS distinguishes between devices that can boot directly a raw image programmed into a SD card or USB disk, and those that boot a flasher image from SD card or USB which then programs the image it encloses into some internal storage like a eMMC.
